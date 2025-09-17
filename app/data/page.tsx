@@ -9,18 +9,18 @@ export default function DataPage() {
       <section className="rounded-xl border border-slate-800 bg-slate-950/70 p-6">
         <h1 className="text-2xl font-semibold text-white">Structured Data Explorer</h1>
         <p className="mt-2 text-sm text-slate-300">
-          Download sanitized exports for research workflows. Snapshots are rounded to 0.1° latitude/longitude to align with
-          our publication policy and include consistent field ordering for downstream ingestion.
+          Download sanitized CSV and GeoJSON snapshots that mirror the table schema. Coordinates are rounded to the nearest
+          0.1° per our disclosure policy and headers remain stable for downstream ingestion.
         </p>
-        <div className="mt-4 rounded border border-slate-800 bg-slate-900/60 p-4">
-          <h2 className="text-sm font-semibold text-white">CSV &amp; GeoJSON exports</h2>
-          <p className="mt-2 text-xs text-slate-400">
-            Choose a dataset/format combination below. Downloads stream from the public API routes with caching enabled;
-            you&apos;ll see a status hint while the file is prepared and any errors will be surfaced inline.
-          </p>
-          <div className="mt-3">
-            <ExportControls />
+        <div className="mt-4 space-y-3 rounded border border-slate-800 bg-slate-900/60 p-4">
+          <div>
+            <h2 className="text-sm font-semibold text-white">CSV &amp; GeoJSON exports</h2>
+            <p className="mt-1 text-xs text-slate-400">
+              Choose a dataset/format combination below. Requests hit the public API routes with cache headers, and inline
+              status messages will confirm when a snapshot is being prepared or if something goes wrong.
+            </p>
           </div>
+          <ExportControls />
         </div>
       </section>
       <EventTable events={events} vessels={vessels} />

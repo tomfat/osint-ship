@@ -130,20 +130,13 @@ visualization, and extending automated ingestion scripts.
 
 ## 10. Data Export Endpoints
 
-- `GET /api/export/csv?dataset=events|vessels` – Returns the requested dataset as a UTF-8 CSV snapshot. Columns follow a
-  fixed order (`id`, `vessel_id`, `vessel_name`, …) so downstream tools can rely on stable headers.
-- `GET /api/export/geojson?dataset=events|vessels` – Produces a GeoJSON `FeatureCollection` with rounded coordinates and
-  mirrored property names for schema parity with the CSV export.
+- `GET /api/export/csv?dataset=events|vessels` – Streams a UTF-8 CSV snapshot with deterministic header ordering. Optional
+  query parameter selects either the event feed (default) or vessel registry; responses are cached for an hour and
+  delivered with `Content-Disposition` so browsers download the file instead of opening it inline.
+- `GET /api/export/geojson?dataset=events|vessels` – Returns a GeoJSON `FeatureCollection` with mirrored field names and
+  point geometries. Event coordinates are rounded to one decimal place (~11 km) to satisfy the disclosure guardrails.
 
-Both endpoints round latitude/longitude to one decimal place (≈11 km) to satisfy the open-source intelligence policy of
-publishing coarse positions only. Responses include cache headers (`Cache-Control: public, max-age=3600, stale-while-revalidate=86400`)
-so mirrors can safely reuse snapshots for an hour.
-
-### Maintaining formats with live data
-
-- Reuse the pure exporter utilities in `lib/exporters.ts` inside any future Supabase/ETL tasks rather than rebuilding CSV
-  strings ad hoc. They enforce column ordering and coordinate rounding in one place.
-- When wiring real tables, prefer database views or SQL `SELECT` lists that match the exporter headers exactly, and add a
-  regression check (e.g., unit test or CI script) that serializes a sample payload through the exporters.
-- If more fields are added later, append them to the end of the header arrays to preserve backward compatibility for
-  analysts consuming the CSV/GeoJSON feeds.
+Both routes reuse the pure exporters in `lib/exporters.ts`, ensuring that rounding rules and schema ordering live in one
+place. When connecting to live Supabase tables, prefer selecting columns in the same order as the exporters and add a
+regression test or build step that serializes a representative record set through these utilities. If additional fields
+are introduced later, append them to the end of the header arrays to avoid breaking existing consumers.

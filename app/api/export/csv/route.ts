@@ -1,25 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import { events } from "@/lib/data/events";
 import { vessels } from "@/lib/data/vessels";
-import { eventsToCsv, ExportDataset, vesselsToCsv } from "@/lib/exporters";
+import { eventsToCsv, ExportDataset, isExportDataset, vesselsToCsv } from "@/lib/exporters";
 
 const CACHE_CONTROL = "public, max-age=3600, stale-while-revalidate=86400";
 
-function parseDataset(value: string | null): ExportDataset | null {
-  if (value === null) {
+function resolveDataset(request: NextRequest): ExportDataset | null {
+  const dataset = request.nextUrl.searchParams.get("dataset");
+  if (dataset === null) {
     return "events";
   }
-  if (value === "events" || value === "vessels") {
-    return value;
-  }
-  return null;
+
+  return isExportDataset(dataset) ? dataset : null;
 }
 
 export async function GET(request: NextRequest) {
-  const dataset = parseDataset(request.nextUrl.searchParams.get("dataset"));
+  const dataset = resolveDataset(request);
 
   if (!dataset) {
-    return NextResponse.json({ error: "Invalid dataset. Use 'events' or 'vessels'." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid dataset. Supported values are 'events' or 'vessels'." },
+      { status: 400 },
+    );
   }
 
   const body = dataset === "events" ? eventsToCsv(events, vessels) : vesselsToCsv(vessels);
@@ -33,3 +36,4 @@ export async function GET(request: NextRequest) {
     },
   });
 }
+

@@ -1,24 +1,12 @@
 import { EventRecord, Vessel } from "./types";
 
-export type ExportDataset = "events" | "vessels";
+export const EXPORT_DATASETS = ["events", "vessels"] as const;
 
-type CsvValue = string | number | boolean | null | undefined;
+export type ExportDataset = (typeof EXPORT_DATASETS)[number];
 
-interface GeoJsonPoint {
-  type: "Point";
-  coordinates: [number, number];
-}
+type CsvPrimitive = string | number | null | undefined;
 
-interface GeoJsonFeature<P> {
-  type: "Feature";
-  geometry: GeoJsonPoint | null;
-  properties: P;
-}
-
-interface GeoJsonFeatureCollection<P> {
-  type: "FeatureCollection";
-  features: Array<GeoJsonFeature<P>>;
-}
+const NEWLINE = "\r\n";
 
 const EVENT_HEADERS = [
   "id",
@@ -26,6 +14,7 @@ const EVENT_HEADERS = [
   "vessel_name",
   "hull_number",
   "vessel_class",
+  "homeport",
   "event_start",
   "event_end",
   "location_name",
@@ -50,43 +39,106 @@ const VESSEL_HEADERS = [
   "image",
 ] as const;
 
-function escapeCsvValue(value: CsvValue): string {
+type VesselCsvHeaders = (typeof VESSEL_HEADERS)[number];
+
+interface EventGeoJsonProperties {
+  id: string;
+  vessel_id: string;
+  vessel_name: string | null;
+  hull_number: string | null;
+  vessel_class: string | null;
+  homeport: string | null;
+  event_start: string;
+  event_end: string | null;
+  location_name: string;
+  latitude: number | null;
+  longitude: number | null;
+  confidence: string;
+  evidence_type: string;
+  summary: string;
+  source_url: string;
+  source_excerpt: string | null;
+  last_verified_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+type VesselGeoJsonProperties = {
+  [K in VesselCsvHeaders]: string | null;
+};
+
+interface GeoJsonPoint {
+  type: "Point";
+  coordinates: [number, number];
+}
+
+interface GeoJsonFeature<P> {
+  type: "Feature";
+  geometry: GeoJsonPoint | null;
+  properties: P;
+}
+
+export interface GeoJsonFeatureCollection<P> {
+  type: "FeatureCollection";
+  features: Array<GeoJsonFeature<P>>;
+}
+
+function formatCsvValue(value: CsvPrimitive): string {
   if (value === null || value === undefined) {
     return "";
   }
+
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      return "";
+    }
+    const serialized = value.toString();
+    return /[",\n\r]/.test(serialized) ? `"${serialized.replace(/"/g, '""')}"` : serialized;
+  }
+
   const stringValue = String(value);
   if (stringValue === "") {
     return "";
   }
-  const escaped = stringValue.replace(/"/g, '""');
-  return `"${escaped}"`;
+
+  return /[",\n\r]/.test(stringValue)
+    ? `"${stringValue.replace(/"/g, '""')}"`
+    : stringValue;
 }
 
-function roundCoordinate(value: number | undefined): number | undefined {
+function buildCsv(headers: readonly string[], rows: CsvPrimitive[][]): string {
+  const formattedRows = rows.map((row) => row.map(formatCsvValue).join(","));
+  return [headers.join(","), ...formattedRows].join(NEWLINE).concat(NEWLINE);
+}
+
+function roundCoordinate(value: number | undefined): number | null {
   if (typeof value !== "number" || Number.isNaN(value)) {
-    return undefined;
+    return null;
   }
+
   return Math.round(value * 10) / 10;
 }
 
 export function eventsToCsv(events: EventRecord[], vessels: Vessel[]): string {
-  const vesselLookup = new Map(vessels.map((vessel) => [vessel.id, vessel]));
-  const headerRow = EVENT_HEADERS.join(",");
+  const vesselById = new Map(vessels.map((vessel) => [vessel.id, vessel]));
+
   const rows = events.map((event) => {
-    const vessel = vesselLookup.get(event.vesselId);
+    const vessel = vesselById.get(event.vesselId);
     const latitude = roundCoordinate(event.location.latitude);
     const longitude = roundCoordinate(event.location.longitude);
-    const values: CsvValue[] = [
+
+    return [
       event.id,
       event.vesselId,
       vessel?.name ?? null,
       vessel?.hullNumber ?? null,
       vessel?.vesselClass ?? null,
+      vessel?.homeport ?? null,
       event.eventDate.start,
       event.eventDate.end ?? null,
       event.location.locationName,
-      latitude !== undefined ? latitude.toFixed(1) : null,
-      longitude !== undefined ? longitude.toFixed(1) : null,
+      latitude !== null ? latitude.toFixed(1) : null,
+      longitude !== null ? longitude.toFixed(1) : null,
       event.confidence,
       event.evidenceType,
       event.summary,
@@ -96,55 +148,55 @@ export function eventsToCsv(events: EventRecord[], vessels: Vessel[]): string {
       event.createdAt,
       event.updatedAt,
     ];
-    return values.map(escapeCsvValue).join(",");
   });
 
-  return [headerRow, ...rows].join("\n");
+  return buildCsv(EVENT_HEADERS, rows);
 }
 
 export function vesselsToCsv(vessels: Vessel[]): string {
-  const headerRow = VESSEL_HEADERS.join(",");
-  const rows = vessels.map((vessel) => {
-    const values: CsvValue[] = [
-      vessel.id,
-      vessel.name,
-      vessel.hullNumber,
-      vessel.vesselClass,
-      vessel.homeport ?? null,
-      vessel.image ?? null,
-    ];
-    return values.map(escapeCsvValue).join(",");
-  });
+  const rows = vessels.map((vessel) => [
+    vessel.id,
+    vessel.name,
+    vessel.hullNumber,
+    vessel.vesselClass,
+    vessel.homeport ?? null,
+    vessel.image ?? null,
+  ]);
 
-  return [headerRow, ...rows].join("\n");
+  return buildCsv(VESSEL_HEADERS, rows);
 }
 
 export function eventsToGeoJson(
   events: EventRecord[],
   vessels: Vessel[],
-): GeoJsonFeatureCollection<Record<(typeof EVENT_HEADERS)[number], string | number | null>> {
-  const vesselLookup = new Map(vessels.map((vessel) => [vessel.id, vessel]));
+): GeoJsonFeatureCollection<EventGeoJsonProperties> {
+  const vesselById = new Map(vessels.map((vessel) => [vessel.id, vessel]));
 
-  const features = events.map((event): GeoJsonFeature<Record<(typeof EVENT_HEADERS)[number], string | number | null>> => {
-    const vessel = vesselLookup.get(event.vesselId);
+  const features = events.map((event): GeoJsonFeature<EventGeoJsonProperties> => {
+    const vessel = vesselById.get(event.vesselId);
     const latitude = roundCoordinate(event.location.latitude);
     const longitude = roundCoordinate(event.location.longitude);
-    const geometry: GeoJsonPoint | null =
-      latitude !== undefined && longitude !== undefined
-        ? { type: "Point", coordinates: [longitude, latitude] as [number, number] }
+
+    const geometry =
+      latitude !== null && longitude !== null
+        ? ({
+            type: "Point",
+            coordinates: [longitude, latitude],
+          } satisfies GeoJsonPoint)
         : null;
 
-    const properties: Record<(typeof EVENT_HEADERS)[number], string | number | null> = {
+    const properties: EventGeoJsonProperties = {
       id: event.id,
       vessel_id: event.vesselId,
       vessel_name: vessel?.name ?? null,
       hull_number: vessel?.hullNumber ?? null,
       vessel_class: vessel?.vesselClass ?? null,
+      homeport: vessel?.homeport ?? null,
       event_start: event.eventDate.start,
       event_end: event.eventDate.end ?? null,
       location_name: event.location.locationName,
-      latitude: latitude ?? null,
-      longitude: longitude ?? null,
+      latitude,
+      longitude,
       confidence: event.confidence,
       evidence_type: event.evidenceType,
       summary: event.summary,
@@ -168,28 +220,27 @@ export function eventsToGeoJson(
   };
 }
 
-export function vesselsToGeoJson(
-  vessels: Vessel[],
-): GeoJsonFeatureCollection<{ [K in (typeof VESSEL_HEADERS)[number]]: string | null }> {
-  const features = vessels.map((vessel): GeoJsonFeature<{ [K in (typeof VESSEL_HEADERS)[number]]: string | null }> => {
-    const properties: { [K in (typeof VESSEL_HEADERS)[number]]: string | null } = {
+export function vesselsToGeoJson(vessels: Vessel[]): GeoJsonFeatureCollection<VesselGeoJsonProperties> {
+  const features = vessels.map((vessel): GeoJsonFeature<VesselGeoJsonProperties> => ({
+    type: "Feature",
+    geometry: null,
+    properties: {
       id: vessel.id,
       name: vessel.name,
       hull_number: vessel.hullNumber,
       vessel_class: vessel.vesselClass,
       homeport: vessel.homeport ?? null,
       image: vessel.image ?? null,
-    };
-
-    return {
-      type: "Feature",
-      geometry: null,
-      properties,
-    };
-  });
+    },
+  }));
 
   return {
     type: "FeatureCollection",
     features,
   };
 }
+
+export function isExportDataset(value: string | null | undefined): value is ExportDataset {
+  return EXPORT_DATASETS.includes((value ?? "") as ExportDataset);
+}
+
