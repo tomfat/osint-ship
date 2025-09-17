@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { EventRecord, Vessel } from "@/lib/types";
 import { ConfidenceBadge } from "./confidence-badge";
 import { formatDateRange, getLatestEventsByVessel } from "@/lib/utils";
@@ -54,14 +56,19 @@ export function MapPanel({ vessels, events, selectedVesselId }: MapPanelProps) {
               <p className="mt-3 text-sm text-slate-300">{latest.location.locationName}</p>
               <p className="mt-1 text-xs text-slate-500">{formatDateRange(latest)}</p>
               <p className="mt-3 text-xs text-slate-400">{latest.summary}</p>
-              <a
-                href={latest.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 inline-block text-xs text-navy-200 hover:text-navy-100"
-              >
-                View source ↗
-              </a>
+              <div className="mt-3 flex flex-wrap gap-3 text-xs">
+                <Link href={`/events/${latest.id}`} className="text-navy-200 hover:text-navy-100">
+                  View details →
+                </Link>
+                <a
+                  href={latest.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-navy-200 hover:text-navy-100"
+                >
+                  View source ↗
+                </a>
+              </div>
             </article>
           );
         })}

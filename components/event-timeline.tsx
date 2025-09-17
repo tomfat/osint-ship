@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { EventRecord, Vessel } from "@/lib/types";
 import { ConfidenceBadge } from "./confidence-badge";
 import { formatDateRange } from "@/lib/utils";
@@ -39,6 +41,9 @@ export function EventTimeline({ events, vessels }: EventTimelineProps) {
                 <span>Location: {event.location.locationName}</span>
                 <span>Evidence: {event.evidenceType}</span>
                 <span>Last verified: {new Date(event.lastVerifiedAt).toLocaleString()}</span>
+                <Link href={`/events/${event.id}`} className="text-navy-200 hover:text-navy-100">
+                  View details →
+                </Link>
                 <a href={event.sourceUrl} className="text-navy-200 hover:text-navy-100" target="_blank" rel="noreferrer">
                   Source ↗
                 </a>
