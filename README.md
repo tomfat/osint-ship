@@ -122,8 +122,19 @@ npm run dev
 - `app/` – App Router pages including the dashboard, methodology, about, and data explorer views.
 - `app/api/` – Read-only API routes (`/api/vessels`, `/api/events`, `/api/events/[id]`, `/api/stats`) backed by mocked data and
   validated with Zod schemas.
-- `components/` – Reusable UI primitives (map placeholder, timeline, tables, metric cards, etc.).
+- `components/` – Reusable UI primitives including the interactive Leaflet map, timeline, tables, and metric cards.
 - `lib/` – Domain types, Zod schemas, and in-memory datasets that approximate the future Supabase models.
 
 Future work includes wiring the mocked datasets to live Supabase tables, integrating Mapbox/Leaflet for geospatial
 visualization, and extending automated ingestion scripts.
+
+### Map Configuration
+
+The dashboard renders geographic events with **React Leaflet** using Mapbox vector tiles. To enable the map locally:
+
+1. Create an environment file by copying `.env.local.example` to `.env.local`.
+2. Set `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` to a Mapbox token that has tile API access.
+3. (Optional) Override the default dark basemap by setting `NEXT_PUBLIC_MAPBOX_STYLE_ID` to a different Mapbox style ID.
+
+If the token is missing, the dashboard will fall back to textual vessel summaries and display a reminder that coordinate
+data cannot be visualized.
