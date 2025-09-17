@@ -1,5 +1,11 @@
 import { EventRecord } from "./types";
 
+export interface EventFilterOptions {
+  vesselId?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
 export function getLatestEventsByVessel(events: EventRecord[]): Record<string, EventRecord> {
   return events.reduce<Record<string, EventRecord>>((acc, event) => {
     const existing = acc[event.vesselId];
@@ -17,11 +23,40 @@ export function getLatestEventsByVessel(events: EventRecord[]): Record<string, E
   }, {});
 }
 
-export function getVesselEvents(events: EventRecord[], vesselId?: string): EventRecord[] {
-  if (!vesselId) {
-    return events;
-  }
-  return events.filter((event) => event.vesselId === vesselId);
+function normalizeEndOfDay(date: string): Date {
+  const normalized = new Date(date);
+  normalized.setUTCHours(23, 59, 59, 999);
+  return normalized;
+}
+
+export function getVesselEvents(events: EventRecord[], filters: EventFilterOptions = {}): EventRecord[] {
+  const { vesselId, startDate, endDate } = filters;
+
+  const rangeStart = startDate ? new Date(startDate) : undefined;
+  const rangeEnd = endDate ? normalizeEndOfDay(endDate) : undefined;
+
+  return events.filter((event) => {
+    if (vesselId && event.vesselId !== vesselId) {
+      return false;
+    }
+
+    if (!rangeStart && !rangeEnd) {
+      return true;
+    }
+
+    const eventStart = new Date(event.eventDate.start);
+    const eventEnd = event.eventDate.end ? new Date(event.eventDate.end) : eventStart;
+
+    if (rangeStart && eventEnd < rangeStart) {
+      return false;
+    }
+
+    if (rangeEnd && eventStart > rangeEnd) {
+      return false;
+    }
+
+    return true;
+  });
 }
 
 export function formatDateRange(event: EventRecord): string {
