@@ -1,0 +1,18 @@
+[
+  {
+    "id": "bbbbbbb1-bbbb-bbbb-bbbb-bbbbbbbbbbb1",
+    "event_id": "aaaaaaa1-aaaa-aaaa-aaaa-aaaaaaaaaaa1",
+    "reviewer": "Duty Officer",
+    "review_notes": "Confirmed via official imagery and press release.",
+    "confidence_adjustment": "High",
+    "created_at": "2024-05-02T14:00:00Z"
+  },
+  {
+    "id": "bbbbbbb2-bbbb-bbbb-bbbb-bbbbbbbbbbb2",
+    "event_id": "aaaaaaa3-aaaa-aaaa-aaaa-aaaaaaaaaaa3",
+    "reviewer": "Analyst",
+    "review_notes": "Single-source OSINT, awaiting satellite confirmation.",
+    "confidence_adjustment": "Low",
+    "created_at": "2024-04-01T11:00:00Z"
+  }
+]

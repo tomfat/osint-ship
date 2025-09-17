@@ -25,17 +25,17 @@ export function getVesselEvents(events: EventRecord[], vesselId?: string): Event
 }
 
 export function formatDateRange(event: EventRecord): string {
-  const start = new Date(event.eventDate.start).toLocaleDateString(undefined, {
+  const start = new Date(event.eventStart).toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
 
-  if (!event.eventDate.end) {
+  if (!event.eventEnd) {
     return start;
   }
 
-  const end = new Date(event.eventDate.end).toLocaleDateString(undefined, {
+  const end = new Date(event.eventEnd).toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
     day: "numeric",

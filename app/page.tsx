@@ -1,9 +1,22 @@
 import { Dashboard } from "@/components/dashboard";
-import { events } from "@/lib/data/events";
-import { fleetStats } from "@/lib/data/stats";
-import { vessels } from "@/lib/data/vessels";
+import { getEvents, getFleetStatistics, getVessels } from "@/lib/queries";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [vessels, events, statsResult] = await Promise.all([
+    getVessels(),
+    getEvents(),
+    getFleetStatistics(),
+  ]);
+
+  const stats =
+    statsResult ?? {
+      totalVessels: vessels.length,
+      activeDeployments: 0,
+      eventsLast30Days: 0,
+      vesselsMissingUpdates: 0,
+      generatedAt: new Date().toISOString(),
+    };
+
   return (
     <div className="space-y-12">
       <section className="rounded-xl border border-slate-800 bg-gradient-to-br from-navy-900/40 via-slate-950 to-slate-950 p-8">
@@ -27,7 +40,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      <Dashboard vessels={vessels} events={events} stats={fleetStats} />
+      <Dashboard vessels={vessels} events={events} stats={stats} />
     </div>
   );
 }

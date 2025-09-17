@@ -22,13 +22,14 @@ export function EventTimeline({ events, vessels }: EventTimelineProps) {
       <ol className="mt-6 space-y-5">
         {events.map((event) => {
           const vessel = vessels.find((v) => v.id === event.vesselId);
+          const hullLabel = vessel?.hullNumber ?? "Unassigned hull number";
           return (
             <li key={event.id} className="grid gap-2 rounded-lg border border-slate-800 bg-slate-900/40 p-4 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="text-sm font-semibold text-white">
                     {vessel?.name ?? "Unknown Vessel"}
-                    <span className="ml-2 text-xs uppercase tracking-wide text-slate-500">{vessel?.hullNumber}</span>
+                    <span className="ml-2 text-xs uppercase tracking-wide text-slate-500">{hullLabel}</span>
                   </p>
                   <p className="text-xs text-slate-400">{formatDateRange(event)}</p>
                 </div>
@@ -36,7 +37,7 @@ export function EventTimeline({ events, vessels }: EventTimelineProps) {
               </div>
               <p className="text-sm text-slate-300">{event.summary}</p>
               <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
-                <span>Location: {event.location.locationName}</span>
+                <span>Location: {event.locationName}</span>
                 <span>Evidence: {event.evidenceType}</span>
                 <span>Last verified: {new Date(event.lastVerifiedAt).toLocaleString()}</span>
                 <a href={event.sourceUrl} className="text-navy-200 hover:text-navy-100" target="_blank" rel="noreferrer">

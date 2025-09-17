@@ -1,8 +1,9 @@
 import { EventTable } from "@/components/event-table";
-import { events } from "@/lib/data/events";
-import { vessels } from "@/lib/data/vessels";
+import { getEvents, getVessels } from "@/lib/queries";
 
-export default function DataPage() {
+export default async function DataPage() {
+  const [vessels, events] = await Promise.all([getVessels(), getEvents()]);
+
   return (
     <div className="space-y-8">
       <section className="rounded-xl border border-slate-800 bg-slate-950/70 p-6">

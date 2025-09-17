@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
-import { fleetStats } from "@/lib/data/stats";
-import { statsSchema } from "@/lib/schema";
+import { getFleetStatistics } from "@/lib/queries";
 
 export async function GET() {
-  const parsed = statsSchema.safeParse(fleetStats);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "Statistics invalid", details: parsed.error.format() }, { status: 500 });
-  }
+  try {
+    const stats = await getFleetStatistics();
 
-  return NextResponse.json({ data: parsed.data });
+    if (!stats) {
+      return NextResponse.json({ error: "Fleet statistics not available" }, { status: 404 });
+    }
+
+    return NextResponse.json({ data: stats });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: "Failed to load fleet statistics", details: message }, { status: 500 });
+  }
 }
