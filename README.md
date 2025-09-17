@@ -128,13 +128,16 @@ npm run dev
 Future work includes wiring the mocked datasets to live Supabase tables, integrating Mapbox/Leaflet for geospatial
 visualization, and extending automated ingestion scripts.
 
-### Map Configuration
+## 10. Data Export Endpoints
 
-The dashboard renders geographic events with **React Leaflet** using Mapbox vector tiles. To enable the map locally:
+- `GET /api/export/csv?dataset=events|vessels` – Streams a UTF-8 CSV snapshot with deterministic header ordering. Optional
+  query parameter selects either the event feed (default) or vessel registry; responses are cached for an hour and
+  delivered with `Content-Disposition` so browsers download the file instead of opening it inline.
+- `GET /api/export/geojson?dataset=events|vessels` – Returns a GeoJSON `FeatureCollection` with mirrored field names and
+  point geometries. Event coordinates are rounded to one decimal place (~11 km) to satisfy the disclosure guardrails.
 
-1. Create an environment file by copying `.env.local.example` to `.env.local`.
-2. Set `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` to a Mapbox token that has tile API access.
-3. (Optional) Override the default dark basemap by setting `NEXT_PUBLIC_MAPBOX_STYLE_ID` to a different Mapbox style ID.
+Both routes reuse the pure exporters in `lib/exporters.ts`, ensuring that rounding rules and schema ordering live in one
+place. When connecting to live Supabase tables, prefer selecting columns in the same order as the exporters and add a
+regression test or build step that serializes a representative record set through these utilities. If additional fields
+are introduced later, append them to the end of the header arrays to avoid breaking existing consumers.
 
-If the token is missing, the dashboard will fall back to textual vessel summaries and display a reminder that coordinate
-data cannot be visualized.
