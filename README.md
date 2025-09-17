@@ -122,7 +122,7 @@ npm run dev
 - `app/` – App Router pages including the dashboard, methodology, about, and data explorer views.
 - `app/api/` – Read-only API routes (`/api/vessels`, `/api/events`, `/api/events/[id]`, `/api/stats`) backed by mocked data and
   validated with Zod schemas.
-- `components/` – Reusable UI primitives (map placeholder, timeline, tables, metric cards, etc.).
+- `components/` – Reusable UI primitives including the interactive Leaflet map, timeline, tables, and metric cards.
 - `lib/` – Domain types, Zod schemas, and in-memory datasets that approximate the future Supabase models.
 
 Future work includes wiring the mocked datasets to live Supabase tables, integrating Mapbox/Leaflet for geospatial
@@ -140,3 +140,4 @@ Both routes reuse the pure exporters in `lib/exporters.ts`, ensuring that roundi
 place. When connecting to live Supabase tables, prefer selecting columns in the same order as the exporters and add a
 regression test or build step that serializes a representative record set through these utilities. If additional fields
 are introduced later, append them to the end of the header arrays to avoid breaking existing consumers.
+

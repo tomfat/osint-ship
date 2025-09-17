@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, PT_Serif } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
+import "leaflet/dist/leaflet.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const serif = PT_Serif({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-serif" });

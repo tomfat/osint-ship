@@ -1,3 +1,5 @@
+"use client";
+
 import { ConfidenceLevel } from "@/lib/types";
 
 const COLOR_MAP: Record<ConfidenceLevel, string> = {
