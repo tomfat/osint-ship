@@ -19,13 +19,16 @@ export function Dashboard({ vessels, events, stats }: DashboardProps) {
   const [selectedVesselId, setSelectedVesselId] = useState<string | "All">("All");
   const [selectedConfidence, setSelectedConfidence] = useState<ConfidenceLevel | "All">("All");
 
+  const vesselFilter = selectedVesselId === "All" ? undefined : selectedVesselId;
+  const confidenceFilter = selectedConfidence === "All" ? undefined : selectedConfidence;
+
   const filteredEvents = useMemo(() => {
-    const vesselFiltered = getVesselEvents(events, selectedVesselId === "All" ? undefined : selectedVesselId);
-    if (selectedConfidence === "All") {
+    const vesselFiltered = getVesselEvents(events, vesselFilter);
+    if (!confidenceFilter) {
       return vesselFiltered;
     }
-    return vesselFiltered.filter((event) => event.confidence === selectedConfidence);
-  }, [events, selectedConfidence, selectedVesselId]);
+    return vesselFiltered.filter((event) => event.confidence === confidenceFilter);
+  }, [events, vesselFilter, confidenceFilter]);
 
   const sortedEvents = useMemo(
     () =>
@@ -104,7 +107,7 @@ export function Dashboard({ vessels, events, stats }: DashboardProps) {
         selectedVesselId={selectedVesselId === "All" ? undefined : selectedVesselId}
       />
 
-      <EventTimeline events={sortedEvents} vessels={vessels} />
+      <EventTimeline vessels={vessels} vesselId={vesselFilter} confidence={confidenceFilter} />
     </div>
   );
 }

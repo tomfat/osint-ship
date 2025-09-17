@@ -1,5 +1,4 @@
 import { EventTable } from "@/components/event-table";
-import { events } from "@/lib/data/events";
 import { vessels } from "@/lib/data/vessels";
 
 export default function DataPage() {
@@ -15,7 +14,7 @@ export default function DataPage() {
           CSV &amp; GeoJSON download links will be exposed after the automated ingestion pipeline is connected to Supabase.
         </div>
       </section>
-      <EventTable events={events} vessels={vessels} />
+      <EventTable vessels={vessels} />
     </div>
   );
 }

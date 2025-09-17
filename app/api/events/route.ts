@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { events } from "@/lib/data/events";
 import { eventSchema } from "@/lib/schema";
 import { ConfidenceLevel } from "@/lib/types";
+import { paginateArray, parsePaginationParams } from "@/lib/pagination";
 
 function filterByConfidence(value: string | null): ConfidenceLevel | undefined {
   if (!value) return undefined;
@@ -45,5 +46,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Event dataset invalid", details: parsed.error.format() }, { status: 500 });
   }
 
-  return NextResponse.json({ data: parsed.data, count: parsed.data.length });
+  const pagination = parsePaginationParams(searchParams);
+  const { data: paginated, total, totalPages } = paginateArray(parsed.data, pagination.page, pagination.pageSize);
+
+  return NextResponse.json({
+    data: paginated,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+    total,
+    totalPages,
+  });
 }
