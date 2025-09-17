@@ -127,3 +127,23 @@ npm run dev
 
 Future work includes wiring the mocked datasets to live Supabase tables, integrating Mapbox/Leaflet for geospatial
 visualization, and extending automated ingestion scripts.
+
+## 10. Data Export Endpoints
+
+- `GET /api/export/csv?dataset=events|vessels` – Returns the requested dataset as a UTF-8 CSV snapshot. Columns follow a
+  fixed order (`id`, `vessel_id`, `vessel_name`, …) so downstream tools can rely on stable headers.
+- `GET /api/export/geojson?dataset=events|vessels` – Produces a GeoJSON `FeatureCollection` with rounded coordinates and
+  mirrored property names for schema parity with the CSV export.
+
+Both endpoints round latitude/longitude to one decimal place (≈11 km) to satisfy the open-source intelligence policy of
+publishing coarse positions only. Responses include cache headers (`Cache-Control: public, max-age=3600, stale-while-revalidate=86400`)
+so mirrors can safely reuse snapshots for an hour.
+
+### Maintaining formats with live data
+
+- Reuse the pure exporter utilities in `lib/exporters.ts` inside any future Supabase/ETL tasks rather than rebuilding CSV
+  strings ad hoc. They enforce column ordering and coordinate rounding in one place.
+- When wiring real tables, prefer database views or SQL `SELECT` lists that match the exporter headers exactly, and add a
+  regression check (e.g., unit test or CI script) that serializes a sample payload through the exporters.
+- If more fields are added later, append them to the end of the header arrays to preserve backward compatibility for
+  analysts consuming the CSV/GeoJSON feeds.
