@@ -90,3 +90,40 @@
 ---
 
 该项目文档反映了前期可行性评估的结论：技术实现简单，但可靠数据稀缺，需要以历史与公开信息汇总为核心方向推进。
+
+## 9. Development Setup
+
+The repository now includes an initial Next.js 14 App Router implementation inspired by `DESIGN.md`. The scaffold focuses on
+rendering curated carrier events with transparent sourcing while keeping the front-end decoupled from future Supabase
+ingestion pipelines.
+
+### Requirements
+
+- Node.js 18+
+- npm (or pnpm/yarn) for dependency management
+
+### Install & Run
+
+```bash
+npm install
+npm run dev
+```
+
+### Available Scripts
+
+- `npm run dev` – Launches the Next.js development server.
+- `npm run build` – Creates an optimized production build.
+- `npm run start` – Serves the production build.
+- `npm run lint` – Executes ESLint using the Next.js configuration.
+- `npm run typecheck` – Runs TypeScript in no-emit mode to validate the schema and API typings.
+
+### Project Structure Highlights
+
+- `app/` – App Router pages including the dashboard, methodology, about, and data explorer views.
+- `app/api/` – Read-only API routes (`/api/vessels`, `/api/events`, `/api/events/[id]`, `/api/stats`) backed by mocked data and
+  validated with Zod schemas.
+- `components/` – Reusable UI primitives (map placeholder, timeline, tables, metric cards, etc.).
+- `lib/` – Domain types, Zod schemas, and in-memory datasets that approximate the future Supabase models.
+
+Future work includes wiring the mocked datasets to live Supabase tables, integrating Mapbox/Leaflet for geospatial
+visualization, and extending automated ingestion scripts.
