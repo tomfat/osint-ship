@@ -2,7 +2,7 @@ import { EventTable } from "@/components/event-table";
 import { getEvents, getVessels } from "@/lib/queries";
 
 export default async function DataPage() {
-  const [vessels, events] = await Promise.all([getVessels(), getEvents()]);
+  const [events, vessels] = await Promise.all([getEvents(), getVessels()]);
 
   return (
     <div className="space-y-8">

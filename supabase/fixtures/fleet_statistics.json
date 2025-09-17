@@ -1,7 +1,10 @@
-{
-  "total_vessels": 11,
-  "active_deployments": 4,
-  "events_last_30_days": 9,
-  "vessels_missing_updates": 3,
-  "generated_at": "2024-05-10T00:00:00Z"
-}
+[
+  {
+    "id": "ccccccc1-cccc-cccc-cccc-ccccccccccc1",
+    "total_vessels": 11,
+    "active_deployments": 4,
+    "events_last_30_days": 9,
+    "vessels_missing_updates": 3,
+    "generated_at": "2024-05-10T00:00:00Z"
+  }
+]

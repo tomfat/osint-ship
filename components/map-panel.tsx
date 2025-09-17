@@ -22,12 +22,13 @@ export function MapPanel({ vessels, events, selectedVesselId }: MapPanelProps) {
             iterations.
           </p>
         </div>
-        <div className="rounded border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-400">Map Integration Planned</div>
+        <div className="rounded border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-400">
+          Map Integration Planned
+        </div>
       </div>
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {displayVessels.map((vessel) => {
           const latest = latestByVessel[vessel.id];
-          const hullLabel = vessel.hullNumber ?? "Unassigned hull number";
           if (!latest) {
             return (
               <article
@@ -35,7 +36,7 @@ export function MapPanel({ vessels, events, selectedVesselId }: MapPanelProps) {
                 className="rounded-lg border border-slate-800 bg-slate-900/50 p-4 text-sm text-slate-400"
               >
                 <h3 className="text-base font-semibold text-white">{vessel.name}</h3>
-                <p className="text-xs uppercase tracking-wide text-slate-500">{hullLabel}</p>
+                <p className="text-xs uppercase tracking-wide text-slate-500">{vessel.hullNumber}</p>
                 <p className="mt-3 text-slate-500">No verified events yet.</p>
               </article>
             );
@@ -46,11 +47,11 @@ export function MapPanel({ vessels, events, selectedVesselId }: MapPanelProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-base font-semibold text-white">{vessel.name}</h3>
-                  <p className="text-xs uppercase tracking-wide text-slate-500">{hullLabel}</p>
+                  <p className="text-xs uppercase tracking-wide text-slate-500">{vessel.hullNumber}</p>
                 </div>
                 <ConfidenceBadge level={latest.confidence} />
               </div>
-              <p className="mt-3 text-sm text-slate-300">{latest.locationName}</p>
+              <p className="mt-3 text-sm text-slate-300">{latest.location.locationName}</p>
               <p className="mt-1 text-xs text-slate-500">{formatDateRange(latest)}</p>
               <p className="mt-3 text-xs text-slate-400">{latest.summary}</p>
               <a

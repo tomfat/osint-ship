@@ -2,20 +2,11 @@ import { Dashboard } from "@/components/dashboard";
 import { getEvents, getFleetStatistics, getVessels } from "@/lib/queries";
 
 export default async function HomePage() {
-  const [vessels, events, statsResult] = await Promise.all([
+  const [vessels, events, stats] = await Promise.all([
     getVessels(),
     getEvents(),
     getFleetStatistics(),
   ]);
-
-  const stats =
-    statsResult ?? {
-      totalVessels: vessels.length,
-      activeDeployments: 0,
-      eventsLast30Days: 0,
-      vesselsMissingUpdates: 0,
-      generatedAt: new Date().toISOString(),
-    };
 
   return (
     <div className="space-y-12">

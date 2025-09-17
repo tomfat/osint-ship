@@ -1,50 +1,49 @@
 import { getSupabaseClient } from "./supabase-client";
-import { mapEventRow, mapReviewLogRow, mapStatsRow, mapVesselRow } from "./supabase-mappers";
-import { eventSchema, reviewLogSchema, statsSchema, vesselSchema } from "./schema";
-import { ConfidenceLevel, EventRecord, FleetStatistics, ReviewLog, Vessel } from "./types";
+import { mapEventRow, mapFleetStatisticsRow, mapReviewLogRow, mapVesselRow } from "./supabase-mappers";
+import type {
+  SupabaseEventRow,
+  SupabaseFleetStatisticsRow,
+  SupabaseReviewLogRow,
+  SupabaseVesselRow,
+} from "./supabase-types";
+import type { ConfidenceLevel, EventRecord, FleetStatistics, ReviewLog, Vessel } from "./types";
 
-const VESSEL_SELECT_COLUMNS =
-  "id, name, hull_number, vessel_class, homeport, image_url, created_at, updated_at";
-const EVENT_SELECT_COLUMNS =
-  "id, vessel_id, event_start, event_end, latitude, longitude, location_name, confidence, evidence_type, summary, source_url, source_excerpt, last_verified_at, created_at, updated_at";
-const REVIEW_LOG_SELECT_COLUMNS =
-  "id, event_id, reviewer, review_notes, confidence_adjustment, created_at";
-const STATS_SELECT_COLUMNS =
-  "total_vessels, active_deployments, events_last_30_days, vessels_missing_updates, generated_at";
-const FLEET_STATS_VIEW = "fleet_statistics";
+export interface EventFilters {
+  vesselId?: string;
+  startDate?: string;
+  endDate?: string;
+  confidence?: ConfidenceLevel;
+}
 
-function assertParse<T>(result: { success: true; data: T } | { success: false; error: unknown }, message: string): T {
-  if (result.success) {
-    return result.data;
+function parseDate(value: string | undefined): number | undefined {
+  if (!value) {
+    return undefined;
   }
-  throw new Error(message);
+  const timestamp = Date.parse(value);
+  return Number.isNaN(timestamp) ? undefined : timestamp;
 }
 
 export async function getVessels(): Promise<Vessel[]> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("vessels")
-    .select(VESSEL_SELECT_COLUMNS)
-    .order("name", { ascending: true });
+    .select("*")
+    .order("name", { ascending: true })
+    .returns<SupabaseVesselRow[]>();
 
   if (error) {
-    throw new Error(`Failed to load vessels: ${error.message}`);
+    throw new Error(`Failed to fetch vessels: ${error.message}`);
   }
 
-  const mapped = (data ?? []).map(mapVesselRow);
-  return assertParse(vesselSchema.array().safeParse(mapped), "Vessel dataset invalid");
+  return (data ?? []).map(mapVesselRow);
 }
-
-type EventFilters = {
-  vesselId?: string;
-  startDate?: Date;
-  endDate?: Date;
-  confidence?: ConfidenceLevel;
-};
 
 export async function getEvents(filters: EventFilters = {}): Promise<EventRecord[]> {
   const supabase = getSupabaseClient();
-  let query = supabase.from("events").select(EVENT_SELECT_COLUMNS).order("last_verified_at", { ascending: false });
+  let query = supabase
+    .from("events")
+    .select("*")
+    .order("last_verified_at", { ascending: false });
 
   if (filters.vesselId) {
     query = query.eq("vessel_id", filters.vesselId);
@@ -54,83 +53,89 @@ export async function getEvents(filters: EventFilters = {}): Promise<EventRecord
     query = query.eq("confidence", filters.confidence);
   }
 
-  const { data, error } = await query;
+  const { data, error } = await query.returns<SupabaseEventRow[]>();
 
   if (error) {
-    throw new Error(`Failed to load events: ${error.message}`);
+    throw new Error(`Failed to fetch events: ${error.message}`);
   }
 
-  const mapped = (data ?? []).map(mapEventRow);
+  const startTimestamp = parseDate(filters.startDate);
+  const endTimestamp = parseDate(filters.endDate);
 
-  const filtered = mapped.filter((event) => {
-    if (filters.startDate) {
-      const eventStart = new Date(event.eventStart);
-      if (eventStart < filters.startDate) {
+  return (data ?? [])
+    .map(mapEventRow)
+    .filter((event) => {
+      if (startTimestamp && Date.parse(event.eventDate.start) < startTimestamp) {
         return false;
       }
-    }
 
-    if (filters.endDate) {
-      const eventEnd = event.eventEnd ? new Date(event.eventEnd) : new Date(event.eventStart);
-      if (eventEnd > filters.endDate) {
-        return false;
+      if (endTimestamp) {
+        const eventEnd = event.eventDate.end ?? event.eventDate.start;
+        if (Date.parse(eventEnd) > endTimestamp) {
+          return false;
+        }
       }
-    }
 
-    return true;
-  });
-
-  return assertParse(eventSchema.array().safeParse(filtered), "Event dataset invalid");
+      return true;
+    });
 }
 
-export async function getEventById(id: string): Promise<EventRecord | null> {
+export async function getEventWithLogs(
+  eventId: string,
+): Promise<{ event: EventRecord; reviewLogs: ReviewLog[] } | null> {
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase
+
+  const { data: eventRows, error: eventError } = await supabase
     .from("events")
-    .select(EVENT_SELECT_COLUMNS)
-    .eq("id", id)
-    .maybeSingle();
+    .select("*")
+    .eq("id", eventId)
+    .limit(1)
+    .returns<SupabaseEventRow[]>();
 
-  if (error) {
-    throw new Error(`Failed to load event: ${error.message}`);
+  if (eventError) {
+    throw new Error(`Failed to fetch event: ${eventError.message}`);
   }
 
-  if (!data) {
+  const eventRow = eventRows?.[0];
+  if (!eventRow) {
     return null;
   }
 
-  const event = mapEventRow(data);
-  return assertParse(eventSchema.safeParse(event), "Event dataset invalid");
-}
-
-export async function getReviewLogsForEvent(eventId: string): Promise<ReviewLog[]> {
-  const supabase = getSupabaseClient();
-  const { data, error } = await supabase
+  const { data: logRows, error: logError } = await supabase
     .from("review_logs")
-    .select(REVIEW_LOG_SELECT_COLUMNS)
+    .select("*")
     .eq("event_id", eventId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .returns<SupabaseReviewLogRow[]>();
 
-  if (error) {
-    throw new Error(`Failed to load review logs: ${error.message}`);
+  if (logError) {
+    throw new Error(`Failed to fetch review logs: ${logError.message}`);
   }
 
-  const mapped = (data ?? []).map(mapReviewLogRow);
-  return assertParse(reviewLogSchema.array().safeParse(mapped), "Review log dataset invalid");
+  return {
+    event: mapEventRow(eventRow),
+    reviewLogs: (logRows ?? []).map(mapReviewLogRow),
+  };
 }
 
-export async function getFleetStatistics(): Promise<FleetStatistics | null> {
+export async function getFleetStatistics(): Promise<FleetStatistics> {
   const supabase = getSupabaseClient();
-  const { data, error } = await supabase.from(FLEET_STATS_VIEW).select(STATS_SELECT_COLUMNS).maybeSingle();
+
+  const { data, error } = await supabase
+    .from("fleet_statistics")
+    .select("*")
+    .order("generated_at", { ascending: false })
+    .limit(1)
+    .returns<SupabaseFleetStatisticsRow[]>();
 
   if (error) {
-    throw new Error(`Failed to load fleet statistics: ${error.message}`);
+    throw new Error(`Failed to fetch fleet statistics: ${error.message}`);
   }
 
-  if (!data) {
-    return null;
+  const row = data?.[0];
+  if (!row) {
+    throw new Error("No fleet statistics available");
   }
 
-  const stats = mapStatsRow(data);
-  return assertParse(statsSchema.safeParse(stats), "Statistics invalid");
+  return mapFleetStatisticsRow(row);
 }

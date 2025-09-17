@@ -3,27 +3,31 @@ export type ConfidenceLevel = "High" | "Medium" | "Low";
 export interface Vessel {
   id: string;
   name: string;
-  hullNumber: string | null;
-  vesselClass: string | null;
-  homeport: string | null;
-  imageUrl: string | null;
-  createdAt: string;
-  updatedAt: string | null;
+  hullNumber: string;
+  vesselClass: string;
+  homeport?: string;
+  image?: string;
+}
+
+export interface EventLocation {
+  latitude?: number;
+  longitude?: number;
+  locationName: string;
 }
 
 export interface EventRecord {
   id: string;
   vesselId: string;
-  eventStart: string;
-  eventEnd: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  locationName: string;
+  eventDate: {
+    start: string;
+    end?: string;
+  };
+  location: EventLocation;
   confidence: ConfidenceLevel;
   evidenceType: string;
   summary: string;
   sourceUrl: string;
-  sourceExcerpt: string | null;
+  sourceExcerpt?: string;
   lastVerifiedAt: string;
   createdAt: string;
   updatedAt: string;
@@ -34,7 +38,7 @@ export interface ReviewLog {
   eventId: string;
   reviewer: string;
   reviewNotes: string;
-  confidenceAdjustment: ConfidenceLevel | null;
+  confidenceAdjustment?: ConfidenceLevel;
   createdAt: string;
 }
 

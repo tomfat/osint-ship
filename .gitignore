@@ -9,8 +9,7 @@ out
 .DS_Store
 .env.local
 .env.*
+!.env.local.example
+tsconfig.tsbuildinfo
 .vercel
 coverage
-
-tsconfig.tsbuildinfo
-!.env.local.example

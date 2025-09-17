@@ -26,17 +26,16 @@ export function EventTable({ events, vessels }: EventTableProps) {
         <tbody className="divide-y divide-slate-800">
           {events.map((event) => {
             const vessel = vesselLookup.get(event.vesselId);
-            const hullLabel = vessel?.hullNumber ?? "--";
             return (
               <tr key={event.id} className="hover:bg-slate-900/50">
                 <td className="px-4 py-3 text-white">
                   <div className="flex flex-col">
                     <span className="font-medium">{vessel?.name ?? "Unknown"}</span>
-                    <span className="text-xs text-slate-500">{hullLabel}</span>
+                    <span className="text-xs text-slate-500">{vessel?.hullNumber ?? "--"}</span>
                   </div>
                 </td>
                 <td className="px-4 py-3 text-xs text-slate-400">{formatDateRange(event)}</td>
-                <td className="px-4 py-3">{event.locationName}</td>
+                <td className="px-4 py-3">{event.location.locationName}</td>
                 <td className="px-4 py-3">
                   <ConfidenceBadge level={event.confidence} />
                 </td>
