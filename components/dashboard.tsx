@@ -75,8 +75,7 @@ export function Dashboard({ vessels, events, stats }: DashboardProps) {
                 <option value="All">All vessels</option>
                 {vessels.map((vessel) => (
                   <option key={vessel.id} value={vessel.id}>
-                    {vessel.name}
-                    {vessel.hullNumber ? ` (${vessel.hullNumber})` : ""}
+                    {vessel.name} ({vessel.hullNumber})
                   </option>
                 ))}
               </select>

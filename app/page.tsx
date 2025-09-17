@@ -1,11 +1,11 @@
 import { Dashboard } from "@/components/dashboard";
-import { getEvents, getFleetStatistics, getVessels } from "@/lib/queries";
+import { fetchEvents, fetchFleetStatistics, fetchVessels } from "@/lib/supabase/queries";
 
 export default async function HomePage() {
   const [vessels, events, stats] = await Promise.all([
-    getVessels(),
-    getEvents(),
-    getFleetStatistics(),
+    fetchVessels(),
+    fetchEvents(),
+    fetchFleetStatistics(),
   ]);
 
   return (

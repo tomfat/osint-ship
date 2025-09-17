@@ -1,12 +1,7 @@
-import type {
-  SupabaseEventRow,
-  SupabaseFleetStatisticsRow,
-  SupabaseReviewLogRow,
-  SupabaseVesselRow,
-} from "./supabase-types";
-import type { EventRecord, FleetStatistics, ReviewLog, Vessel } from "./types";
+import type { EventRecord, FleetStatistics, ReviewLog, Vessel } from "../types";
+import type { EventRow, FleetStatisticsRow, ReviewLogRow, VesselRow } from "./types";
 
-export function mapVesselRow(row: SupabaseVesselRow): Vessel {
+export function mapVessel(row: VesselRow): Vessel {
   return {
     id: row.id,
     name: row.name,
@@ -17,18 +12,18 @@ export function mapVesselRow(row: SupabaseVesselRow): Vessel {
   };
 }
 
-export function mapEventRow(row: SupabaseEventRow): EventRecord {
+export function mapEvent(row: EventRow): EventRecord {
   return {
     id: row.id,
     vesselId: row.vessel_id,
     eventDate: {
-      start: row.start_at,
-      end: row.end_at ?? undefined,
+      start: row.event_start,
+      end: row.event_end ?? undefined,
     },
     location: {
       locationName: row.location_name,
-      ...(row.latitude === null ? {} : { latitude: row.latitude }),
-      ...(row.longitude === null ? {} : { longitude: row.longitude }),
+      latitude: row.location_latitude ?? undefined,
+      longitude: row.location_longitude ?? undefined,
     },
     confidence: row.confidence,
     evidenceType: row.evidence_type,
@@ -41,7 +36,7 @@ export function mapEventRow(row: SupabaseEventRow): EventRecord {
   };
 }
 
-export function mapReviewLogRow(row: SupabaseReviewLogRow): ReviewLog {
+export function mapReviewLog(row: ReviewLogRow): ReviewLog {
   return {
     id: row.id,
     eventId: row.event_id,
@@ -52,7 +47,7 @@ export function mapReviewLogRow(row: SupabaseReviewLogRow): ReviewLog {
   };
 }
 
-export function mapFleetStatisticsRow(row: SupabaseFleetStatisticsRow): FleetStatistics {
+export function mapFleetStatistics(row: FleetStatisticsRow): FleetStatistics {
   return {
     totalVessels: row.total_vessels,
     activeDeployments: row.active_deployments,

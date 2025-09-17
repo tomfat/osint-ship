@@ -1,8 +1,8 @@
 import { EventTable } from "@/components/event-table";
-import { getEvents, getVessels } from "@/lib/queries";
+import { fetchEvents, fetchVessels } from "@/lib/supabase/queries";
 
 export default async function DataPage() {
-  const [events, vessels] = await Promise.all([getEvents(), getVessels()]);
+  const [events, vessels] = await Promise.all([fetchEvents(), fetchVessels()]);
 
   return (
     <div className="space-y-8">
