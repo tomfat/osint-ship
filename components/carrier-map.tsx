@@ -138,7 +138,12 @@ export function CarrierMap({ events, vessels, className }: CarrierMapProps) {
         worldCopyJump
         preferCanvas
       >
-        <TileLayer attribution={tileAttribution} url={tileUrl} />
+        <TileLayer
+          attribution={tileAttribution}
+          url={tileUrl}
+          tileSize={512}
+          zoomOffset={-1}
+        />
         <MapViewController center={initialCenter} bounds={bounds} zoom={initialZoom} />
         {eventsWithCoordinates.map((event) => {
           const position: LatLngTuple = [
