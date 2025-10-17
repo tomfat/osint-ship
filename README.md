@@ -141,3 +141,16 @@ place. When connecting to live Supabase tables, prefer selecting columns in the 
 regression test or build step that serializes a representative record set through these utilities. If additional fields
 are introduced later, append them to the end of the header arrays to avoid breaking existing consumers.
 
+## 11. Fleet Metrics Calculation
+
+- The headline statistics shown on the homepage are derived at build time by `calculateFleetStatistics` in `lib/utils.ts`,
+  ensuring the metric cards always mirror the vessels and events datasets.
+- `totalVessels` counts the records exported from `lib/data/vessels.ts`.
+- `eventsLast30Days` includes events whose `lastVerifiedAt` timestamp falls within the past 30 days.
+- `activeDeployments` counts vessels whose most recent event is both less than 30 days old and still ongoing (no end date or an
+  end date in the future).
+- `vesselsMissingUpdates` covers vessels with no recorded events or whose latest verification is older than 14 days, matching
+  the “Needs review” card description.
+
+该项目文档反映了前期可行性评估的结论：技术实现简单，但可靠数据稀缺，需要以历史与公开信息汇总为核心方向推进。
+
