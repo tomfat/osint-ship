@@ -109,6 +109,9 @@ npm install
 npm run dev
 ```
 
+> **Mapbox setup:** Create a `.env.local` file with `NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN` and (optionally) `NEXT_PUBLIC_MAPBOX_STYLE_ID`.
+> These values are required both locally and in deployment environments to load the map tiles.
+
 ### Available Scripts
 
 - `npm run dev` – Launches the Next.js development server.
