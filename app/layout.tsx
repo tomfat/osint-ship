@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Inter, PT_Serif } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
@@ -7,14 +8,13 @@ import "leaflet/dist/leaflet.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const serif = PT_Serif({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-serif" });
 
-export const metadata: Metadata = {
+const baseMetadata: Metadata = {
   title: {
     default: "OSINT Carrier Tracker",
     template: "%s | OSINT Carrier Tracker",
   },
   description:
     "An open intelligence portal that visualizes the last known positions of U.S. Navy aircraft carriers.",
-  metadataBase: new URL("https://example.com"),
   openGraph: {
     title: "OSINT Carrier Tracker",
     description:
@@ -22,6 +22,29 @@ export const metadata: Metadata = {
     type: "website",
   },
 };
+
+function resolveSiteUrl() {
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL;
+  }
+
+  const host = headers().get("host");
+  if (!host) {
+    return undefined;
+  }
+
+  const protocol = host.includes("localhost") ? "http" : "https";
+  return `${protocol}://${host}`;
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const siteUrl = resolveSiteUrl();
+
+  return {
+    ...baseMetadata,
+    metadataBase: siteUrl ? new URL(siteUrl) : undefined,
+  };
+}
 
 export default function RootLayout({
   children,
